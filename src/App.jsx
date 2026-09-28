@@ -12,7 +12,8 @@ import {
   Zap,
   TrendingUp,
   BrainCircuit,
-  RefreshCw
+  RefreshCw,
+  Globe
 } from 'lucide-react';
 
 export default function App() {
@@ -45,15 +46,20 @@ export default function App() {
   const [geminiApiKey, setGeminiApiKey] = useState(
     () => localStorage.getItem('GEMINI_API_KEY') || ''
   );
+  const [apiUrl, setApiUrl] = useState(
+    () => localStorage.getItem('VITE_API_URL') || (import.meta.env.VITE_API_URL || '')
+  );
+
+  const API_BASE = apiUrl.trim().replace(/\/$/, '');
 
   useEffect(() => {
     fetchTodos();
-  }, []);
+  }, [apiUrl]);
 
   const fetchTodos = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/todos');
+      const res = await fetch(`${API_BASE}/api/todos`);
       const data = await res.json();
       if (data.success) {
         setTodos(data.data);
@@ -70,7 +76,7 @@ export default function App() {
     if (!newText.trim()) return;
 
     try {
-      const res = await fetch('/api/todos', {
+      const res = await fetch(`${API_BASE}/api/todos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -91,7 +97,7 @@ export default function App() {
 
   const handleToggle = async (id, currentStatus) => {
     try {
-      const res = await fetch(`/api/todos/${id}`, {
+      const res = await fetch(`${API_BASE}/api/todos/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ completed: !currentStatus })
@@ -107,7 +113,7 @@ export default function App() {
 
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`/api/todos/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/api/todos/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         setTodos(todos.filter(t => t.id !== id));
@@ -122,7 +128,7 @@ export default function App() {
     if (!goal.trim()) return;
     try {
       setBreakdownLoading(true);
-      const res = await fetch('/api/ai/breakdown', {
+      const res = await fetch(`${API_BASE}/api/ai/breakdown`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -149,7 +155,7 @@ export default function App() {
   const handleAddSelectedSubtasks = async () => {
     const toAdd = suggestedTasks.filter((_, idx) => selectedSubtasks[idx]);
     for (const task of toAdd) {
-      await fetch('/api/todos', {
+      await fetch(`${API_BASE}/api/todos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -170,7 +176,7 @@ export default function App() {
     try {
       setShowPrioritize(true);
       setPrioritizeLoading(true);
-      const res = await fetch('/api/ai/prioritize', {
+      const res = await fetch(`${API_BASE}/api/ai/prioritize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey: geminiApiKey || undefined })
@@ -190,7 +196,7 @@ export default function App() {
   const handleFetchBriefing = async () => {
     try {
       setBriefingLoading(true);
-      const res = await fetch('/api/ai/briefing', {
+      const res = await fetch(`${API_BASE}/api/ai/briefing`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey: geminiApiKey || undefined })
@@ -206,9 +212,11 @@ export default function App() {
     }
   };
 
-  const handleSaveApiKey = () => {
+  const handleSaveSettings = () => {
     localStorage.setItem('GEMINI_API_KEY', geminiApiKey.trim());
+    localStorage.setItem('VITE_API_URL', apiUrl.trim());
     setShowSettings(false);
+    fetchTodos();
   };
 
   // Filtered & Searched Todos
@@ -265,7 +273,7 @@ export default function App() {
           <button
             className="btn btn-secondary"
             onClick={() => setShowSettings(true)}
-            title="Configure Gemini API Key"
+            title="Configure API and Gemini Keys"
           >
             <Settings size={15} />
           </button>
@@ -576,33 +584,54 @@ export default function App() {
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Settings size={20} color="#94a3b8" />
-                <h2 className="modal-title">AI & API Settings</h2>
+                <h2 className="modal-title">API & Deployment Settings</h2>
               </div>
               <button className="modal-close" onClick={() => setShowSettings(false)}>
                 <X size={18} />
               </button>
             </div>
 
-            <p style={{ fontSize: '0.85rem', color: '#94a3b8', lineHeight: 1.5 }}>
-              Enter your Google Gemini API key to activate real-time Gemini 3.8 Flash model generation. If empty, the app runs on built-in smart heuristic fallbacks.
-            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                  <Globe size={14} /> Backend API URL (Optional):
+                </label>
+                <input
+                  type="text"
+                  className="input-text"
+                  placeholder="e.g. https://shipwaiz-ai-todo-be.netlify.app (Leave empty for default /api)"
+                  value={apiUrl}
+                  onChange={(e) => setApiUrl(e.target.value)}
+                  style={{ width: '100%' }}
+                />
+                <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
+                  Set this to your deployed Netlify backend URL or leave empty for local development.
+                </p>
+              </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>Gemini API Key:</label>
-              <input
-                type="password"
-                className="input-text"
-                placeholder="AIzaSy..."
-                value={geminiApiKey}
-                onChange={(e) => setGeminiApiKey(e.target.value)}
-              />
+              <div>
+                <label style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                  <Sparkles size={14} color="#ec4899" /> Google Gemini API Key (Optional):
+                </label>
+                <input
+                  type="password"
+                  className="input-text"
+                  placeholder="AIzaSy..."
+                  value={geminiApiKey}
+                  onChange={(e) => setGeminiApiKey(e.target.value)}
+                  style={{ width: '100%' }}
+                />
+                <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
+                  Activates real-time Gemini 3.8 Flash model. If omitted, smart built-in heuristics are used.
+                </p>
+              </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
               <button className="btn btn-secondary" onClick={() => setShowSettings(false)}>
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={handleSaveApiKey}>
+              <button className="btn btn-primary" onClick={handleSaveSettings}>
                 Save Settings
               </button>
             </div>
