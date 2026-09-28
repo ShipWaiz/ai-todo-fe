@@ -47,7 +47,7 @@ export default function App() {
     () => localStorage.getItem('GEMINI_API_KEY') || ''
   );
   const [apiUrl, setApiUrl] = useState(
-    () => localStorage.getItem('VITE_API_URL') || (import.meta.env.VITE_API_URL || '')
+    () => localStorage.getItem('VITE_API_URL') || (import.meta.env.VITE_API_URL || 'https://radiant-ganache-cd273a.netlify.app')
   );
 
   const API_BASE = apiUrl.trim().replace(/\/$/, '');
