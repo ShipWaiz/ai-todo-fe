@@ -243,6 +243,9 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <h1 className="brand-title">Smart To-Do</h1>
               <span className="brand-badge">Gemini AI</span>
+              <span className="brand-badge" style={{ textTransform: 'uppercase', borderColor: '#38bdf8', color: '#38bdf8', fontWeight: 700 }}>
+                {import.meta.env.VITE_APP_ENV || 'prod'}
+              </span>
             </div>
             <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>
               Minimal full-stack AI task orchestrator PoC

@@ -4,6 +4,22 @@
 
 [build.environment]
   VITE_API_URL = "https://radiant-ganache-cd273a.netlify.app"
+  VITE_APP_ENV = "production"
+
+# Production Context (main branch)
+[context.production.environment]
+  VITE_API_URL = "https://radiant-ganache-cd273a.netlify.app"
+  VITE_APP_ENV = "production"
+
+# QA Context (qa branch)
+[context.qa.environment]
+  VITE_API_URL = "https://qa--radiant-ganache-cd273a.netlify.app"
+  VITE_APP_ENV = "qa"
+
+# Development Context (dev branch)
+[context.dev.environment]
+  VITE_API_URL = "https://dev--radiant-ganache-cd273a.netlify.app"
+  VITE_APP_ENV = "dev"
 
 # Transparently proxy /api calls to the deployed backend
 [[redirects]]
